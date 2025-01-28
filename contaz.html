@@ -3,12 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Contador de Ocurrencias</title>
+  <title>Contador de Ocurrencias y Guardado</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       text-align: center;
       padding: 20px;
+      background-color: #daf4ef;
     }
     .container {
       display: grid;
@@ -23,12 +24,13 @@
       border-radius: 5px;
       text-align: center;
       transition: background-color 0.3s, transform 0.2s;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 1);
       cursor: pointer;
+      background-color: white;
     }
     .counter:active {
       transform: translateY(2px);
-      box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 2px 3px rgba(0, 0, 0, 2);
     }
     .counter.highlight {
       background-color: #ffeeba;
@@ -42,14 +44,14 @@
       border-radius: 5px;
       cursor: pointer;
       transition: background-color 0.3s, transform 0.2s;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 1);
     }
     button:hover {
       background-color: #0056b3;
     }
     button:active {
       transform: translateY(2px);
-      box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 2px 3px rgba(0, 0, 0, 2);
     }
     #rangeForm {
       margin: 20px auto;
@@ -64,16 +66,38 @@
       border: 1px solid #ddd;
       border-radius: 5px;
     }
+    #outputContainer {
+      margin: 20px;
+    }
+    #output {
+      width: 100%;
+      max-width: 600px;
+      height: 100px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      background-color: #fff;
+      resize: none;
+    }
+    #saveForm {
+      margin-top: 10px;
+    }
+    #saveForm input {
+      padding: 5px;
+      width: 200px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
   </style>
 </head>
 <body>
-  <h1>Contador de Ocurrencias</h1>
+  <h1>Contador de Ocurrencias y Guardado</h1>
 
   <form id="rangeForm" onsubmit="updateRange(event)">
     <label for="startRange">Inicio:</label>
     <input type="number" id="startRange" value="1" min="1">
     <label for="endRange">Fin:</label>
-    <input type="number" id="endRange" value="26" min="1">
+    <input type="number" id="endRange" value="27" min="1">
     <button type="submit">Actualizar Rango</button>
   </form>
 
@@ -81,16 +105,40 @@
   <button onclick="sortByCount()">Ordenar por Contador</button>
   <button onclick="sortByValue()">Ordenar por Cifra</button>
 
-  <audio id="clickSound" src="https://www.soundjay.com/button/sounds/button-29.mp3"></audio>
+  <div class="container" id="specialButtons">
+    <button onclick="addSpecialCharacter(' ')">Space</button>
+    <button onclick="addSpecialCharacter('!')">!</button>
+    <button onclick="addSpecialCharacter('\"')">"</button>
+    <button onclick="addSpecialCharacter('[')">[</button>
+    <button onclick="addSpecialCharacter(']')">]</button>
+    <button onclick="addSpecialCharacter(';')">;</button>
+    <button onclick="addSpecialCharacter(',')">,</button>
+    <button onclick="addSpecialCharacter(':')">:</button>
+    <button onclick="addSpecialCharacter('.')">.</button>
+    <button onclick="undoLastAction()" title="Deshacer última acción">←</button>
+  </div>
+
+  <div id="outputContainer">
+    <textarea id="output" readonly></textarea>
+    <form id="saveForm" onsubmit="saveToFile(event)">
+      <input type="text" id="filename" placeholder="Nombre del archivo (opcional)">
+      <button type="submit">Guardar</button>
+    </form>
+  </div>
+
+  <audio id="clickSound" src="./sound/Mouse-Click-00-c-FesliyanStudios.com.mp3"></audio>
 
   <script>
     let counters = [];
     let lastHighlighted = null;
+    let actionStack = [];
 
     const container = document.getElementById('counterContainer');
     const startRangeInput = document.getElementById('startRange');
     const endRangeInput = document.getElementById('endRange');
     const clickSound = document.getElementById('clickSound');
+    const output = document.getElementById('output');
+    const filenameInput = document.getElementById('filename');
 
     function initializeCounters(start, end) {
       counters = Array.from({ length: end - start + 1 }, (_, i) => ({
@@ -98,6 +146,7 @@
         count: 0
       }));
       lastHighlighted = null;
+      actionStack = [];
       renderCounters();
     }
 
@@ -111,6 +160,8 @@
         div.onclick = () => {
           playClickSound();
           incrementCounter(index);
+          addToOutput(value);
+          actionStack.push({ type: 'increment', index });
         };
         container.appendChild(div);
       });
@@ -157,7 +208,59 @@
       clickSound.play();
     }
 
-    initializeCounters(1, 26); // Inicializa el rango por defecto
+    function addToOutput(value) {
+      output.value += value + ' ';
+    }
+
+    function addSpecialCharacter(char) {
+      playClickSound();
+      addToOutput(char);
+      actionStack.push({ type: 'special', char });
+    }
+
+    function undoLastAction() {
+      if (actionStack.length === 0) {
+        alert('No hay acciones para deshacer.');
+        return;
+      }
+      const lastAction = actionStack.pop();
+      if (lastAction.type === 'increment') {
+        counters[lastAction.index].count--;
+        lastHighlighted = actionStack.filter(action => action.type === 'increment').slice(-1)[0]?.index || null;
+        renderCounters();
+      } else if (lastAction.type === 'special') {
+        const currentOutput = output.value.trimEnd();
+        output.value = currentOutput.slice(0, currentOutput.lastIndexOf(' ')) + ' ';
+      }
+    }
+
+    function saveToFile(event) {
+      event.preventDefault();
+      const content = output.value.trim();
+      if (!content) {
+        alert('No hay contenido para guardar.');
+        return;
+      }
+      const filename = filenameInput.value || generateDefaultFilename();
+      const blob = new Blob([content], { type: 'text/plain' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      a.click();
+    }
+
+    function generateDefaultFilename() {
+      const now = new Date();
+      const year = now.getFullYear().toString().slice(-2);
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      return `Codificado${year}${month}${day}${hours}${minutes}${seconds}.txt`;
+    }
+
+    initializeCounters(1, 27); // Inicializa el rango por defecto
   </script>
 </body>
 </html>
