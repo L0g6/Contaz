@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contador de Ocurrencias</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+    .container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+      gap: 10px;
+      margin: 20px auto;
+      max-width: 600px;
+    }
+    .counter {
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      text-align: center;
+      transition: background-color 0.3s, transform 0.2s;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      cursor: pointer;
+    }
+    .counter:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
+    }
+    .counter.highlight {
+      background-color: #ffeeba;
+    }
+    button {
+      margin: 10px;
+      padding: 10px 15px;
+      border: none;
+      background-color: #007bff;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s, transform 0.2s;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    button:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
+    }
+    #rangeForm {
+      margin: 20px auto;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+    #rangeForm input {
+      width: 60px;
+      padding: 5px;
+      text-align: center;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Contador de Ocurrencias</h1>
+
+  <form id="rangeForm" onsubmit="updateRange(event)">
+    <label for="startRange">Inicio:</label>
+    <input type="number" id="startRange" value="1" min="1">
+    <label for="endRange">Fin:</label>
+    <input type="number" id="endRange" value="26" min="1">
+    <button type="submit">Actualizar Rango</button>
+  </form>
+
+  <div class="container" id="counterContainer"></div>
+  <button onclick="sortByCount()">Ordenar por Contador</button>
+  <button onclick="sortByValue()">Ordenar por Cifra</button>
+
+  <audio id="clickSound" src="https://www.soundjay.com/button/sounds/button-29.mp3"></audio>
+
+  <script>
+    let counters = [];
+    let lastHighlighted = null;
+
+    const container = document.getElementById('counterContainer');
+    const startRangeInput = document.getElementById('startRange');
+    const endRangeInput = document.getElementById('endRange');
+    const clickSound = document.getElementById('clickSound');
+
+    function initializeCounters(start, end) {
+      counters = Array.from({ length: end - start + 1 }, (_, i) => ({
+        value: start + i,
+        count: 0
+      }));
+      lastHighlighted = null;
+      renderCounters();
+    }
+
+    function renderCounters() {
+      container.innerHTML = '';
+      counters.forEach(({ value, count }, index) => {
+        const div = document.createElement('div');
+        div.className = 'counter';
+        div.id = `counter-${index}`;
+        div.innerHTML = `<strong>${value}</strong><br>Count: ${count}`;
+        div.onclick = () => {
+          playClickSound();
+          incrementCounter(index);
+        };
+        container.appendChild(div);
+      });
+      highlightLast();
+    }
+
+    function incrementCounter(index) {
+      counters[index].count++;
+      lastHighlighted = index;
+      renderCounters();
+    }
+
+    function highlightLast() {
+      if (lastHighlighted !== null) {
+        document
+          .getElementById(`counter-${lastHighlighted}`)
+          .classList.add('highlight');
+      }
+    }
+
+    function sortByCount() {
+      counters.sort((a, b) => b.count - a.count);
+      renderCounters();
+    }
+
+    function sortByValue() {
+      counters.sort((a, b) => a.value - b.value);
+      renderCounters();
+    }
+
+    function updateRange(event) {
+      event.preventDefault();
+      const start = parseInt(startRangeInput.value, 10);
+      const end = parseInt(endRangeInput.value, 10);
+      if (start < end) {
+        initializeCounters(start, end);
+      } else {
+        alert('El rango de inicio debe ser menor que el de fin.');
+      }
+    }
+
+    function playClickSound() {
+      clickSound.currentTime = 0;
+      clickSound.play();
+    }
+
+    initializeCounters(1, 26); // Inicializa el rango por defecto
+  </script>
+</body>
+</html>

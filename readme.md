@@ -1,3 +1,5 @@
+La página es pública y se accede desde https://l0g6.github.io/Contaz/ 
+
 Este código
 trata de crear una forma 
 rápida de contabilizar ocurrencias de
