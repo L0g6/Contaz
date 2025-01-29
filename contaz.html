@@ -1,266 +1,325 @@
+<!-- 
+
+This HTML file creates a web page for counting occurrences and saving the results. 
+The page includes a range form to set the start and end values for the counters, 
+buttons to sort the counters by count or value, special character buttons, 
+an output area to display the results, and a form to save the output to a file.
+
+Key Features:
+- Range Form: Allows the user to set the start and end values for the counters.
+- Counters: Displays a grid of counters that can be incremented by clicking.
+- Sorting: Buttons to sort the counters by count or value.
+- Special Characters: Buttons to add special characters to the output.
+- Output Area: Displays the concatenated values of the counters.
+- Save Form: Allows the user to save the output to a file with a specified or default filename.
+- Undo Functionality: Allows the user to undo the last action.
+
+Styles:
+- The page uses a simple, clean design with a centered layout and responsive grid for the counters.
+- Buttons and counters have hover and active states for better user interaction.
+
+JavaScript:
+- Initializes counters based on the specified range.
+- Handles counter increments, sorting, and special character additions.
+- Manages an action stack and output history for undo functionality.
+- Plays a click sound on counter and special character button clicks.
+- Saves the output to a file with a specified or default filename.
+
+Audio:
+- Includes an audio element for playing a click sound on interactions.
+
+Initialization:
+- The counters are initialized with a default range from 1 to 27.
+-->
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Contador de Ocurrencias y Guardado</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 20px;
-      background-color: #daf4ef;
-    }
-    .container {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-      gap: 10px;
-      margin: 20px auto;
-      max-width: 600px;
-    }
-    .counter {
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-      text-align: center;
-      transition: background-color 0.3s, transform 0.2s;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 1);
-      cursor: pointer;
-      background-color: white;
-    }
-    .counter:active {
-      transform: translateY(2px);
-      box-shadow: 0 2px 3px rgba(0, 0, 0, 2);
-    }
-    .counter.highlight {
-      background-color: #ffeeba;
-    }
-    button {
-      margin: 10px;
-      padding: 10px 15px;
-      border: none;
-      background-color: #007bff;
-      color: white;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background-color 0.3s, transform 0.2s;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 1);
-    }
-    button:hover {
-      background-color: #0056b3;
-    }
-    button:active {
-      transform: translateY(2px);
-      box-shadow: 0 2px 3px rgba(0, 0, 0, 2);
-    }
-    #rangeForm {
-      margin: 20px auto;
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-    }
-    #rangeForm input {
-      width: 60px;
-      padding: 5px;
-      text-align: center;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-    }
-    #outputContainer {
-      margin: 20px;
-    }
-    #output {
-      width: 100%;
-      max-width: 600px;
-      height: 100px;
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-      background-color: #fff;
-      resize: none;
-    }
-    #saveForm {
-      margin-top: 10px;
-    }
-    #saveForm input {
-      padding: 5px;
-      width: 200px;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contador de Ocurrencias y Guardado</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+            background-color: #daf4ef;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 10px;
+            margin: 20px auto;
+            max-width: 600px;
+        }
+
+        .counter {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            text-align: center;
+            transition: background-color 0.3s, transform 0.2s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 1);
+            cursor: pointer;
+            background-color: white;
+        }
+
+        .counter:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 3px rgba(0, 0, 0, 2);
+        }
+
+        .counter.highlight {
+            background-color: #ffeeba;
+        }
+
+        button {
+            margin: 10px;
+            padding: 10px 15px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 1);
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        button:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 3px rgba(0, 0, 0, 2);
+        }
+
+        #rangeForm {
+            margin: 20px auto;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        #rangeForm input {
+            width: 60px;
+            padding: 5px;
+            text-align: center;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        #outputContainer {
+            margin: 20px;
+        }
+
+        #output {
+            width: 100%;
+            max-width: 600px;
+            height: 100px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #fff;
+            resize: none;
+        }
+
+        #saveForm {
+            margin-top: 10px;
+        }
+
+        #saveForm input {
+            padding: 5px;
+            width: 200px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+    </style>
 </head>
+
 <body>
-  <h1>Contador de Ocurrencias y Guardado</h1>
+    <h1>Contador de Ocurrencias y Guardado</h1>
 
-  <form id="rangeForm" onsubmit="updateRange(event)">
-    <label for="startRange">Inicio:</label>
-    <input type="number" id="startRange" value="1" min="1">
-    <label for="endRange">Fin:</label>
-    <input type="number" id="endRange" value="27" min="1">
-    <button type="submit">Actualizar Rango</button>
-  </form>
-
-  <div class="container" id="counterContainer"></div>
-  <button onclick="sortByCount()">Ordenar por Contador</button>
-  <button onclick="sortByValue()">Ordenar por Cifra</button>
-
-  <div class="container" id="specialButtons">
-    <button onclick="addSpecialCharacter(' ')">Space</button>
-    <button onclick="addSpecialCharacter('!')">!</button>
-    <button onclick="addSpecialCharacter('&quot;')">"</button>
-    <button onclick="addSpecialCharacter('&#91;')">[</button>
-    <button onclick="addSpecialCharacter(']')">]</button>
-    <button onclick="addSpecialCharacter(';')">;</button>
-    <button onclick="addSpecialCharacter(',')">,</button>
-    <button onclick="addSpecialCharacter(':')">:</button>
-    <button onclick="addSpecialCharacter('.')">.</button>
-    <button onclick="undoLastAction()" title="Deshacer última acción">←</button>
-  </div>
-
-  <div id="outputContainer">
-    <textarea id="output" readonly></textarea>
-    <form id="saveForm" onsubmit="saveToFile(event)">
-      <input type="text" id="filename" placeholder="Nombre del archivo (opcional)">
-      <button type="submit">Guardar</button>
+    <form id="rangeForm" onsubmit="updateRange(event)">
+        <label for="startRange">Inicio:</label>
+        <input type="number" id="startRange" value="1" min="1">
+        <label for="endRange">Fin:</label>
+        <input type="number" id="endRange" value="27" min="1">
+        <button type="submit">Actualizar Rango</button>
     </form>
-  </div>
 
-  <audio id="clickSound" src="./sound/Mouse-Click-00-c-FesliyanStudios.com.mp3"></audio>
+    <div class="container" id="counterContainer"></div>
+    <button onclick="sortByCount()">Ordenar por Contador</button>
+    <button onclick="sortByValue()">Ordenar por Cifra</button>
 
-  <script>
-    let counters = [];
-    let lastHighlighted = null;
-    let actionStack = [];
+    <div class="container" id="specialButtons">
+        <button onclick="addSpecialCharacter(' ')">Space</button>
+        <button onclick="addSpecialCharacter('!')">!</button>
+        <button onclick="addSpecialCharacter('&quot;')">"</button>
+        <button onclick="addSpecialCharacter('&#91;')">[</button>
+        <button onclick="addSpecialCharacter(']')">]</button>
+        <button onclick="addSpecialCharacter(';')">;</button>
+        <button onclick="addSpecialCharacter(',')">,</button>
+        <button onclick="addSpecialCharacter(':')">:</button>
+        <button onclick="addSpecialCharacter('.')">.</button>
+        <button onclick="undoLastAction()" title="Deshacer última acción">←</button>
+    </div>
 
-    const container = document.getElementById('counterContainer');
-    const startRangeInput = document.getElementById('startRange');
-    const endRangeInput = document.getElementById('endRange');
-    const clickSound = document.getElementById('clickSound');
-    const output = document.getElementById('output');
-    const filenameInput = document.getElementById('filename');
+    <div id="outputContainer">
+        <textarea id="output" readonly></textarea>
+        <form id="saveForm" onsubmit="saveToFile(event)">
+            <input type="text" id="filename" placeholder="Nombre del archivo (opcional)">
+            <button type="submit">Guardar</button>
+        </form>
+    </div>
 
-    function initializeCounters(start, end) {
-      counters = Array.from({ length: end - start + 1 }, (_, i) => ({
-        value: start + i,
-        count: 0
-      }));
-      lastHighlighted = null;
-      actionStack = [];
-      renderCounters();
-    }
+    <audio id="clickSound" src="./sound/Mouse-Click-00-c-FesliyanStudios.com.mp3"></audio>
 
-    function renderCounters() {
-      container.innerHTML = '';
-      counters.forEach(({ value, count }, index) => {
-        const div = document.createElement('div');
-        div.className = 'counter';
-        div.id = `counter-${index}`;
-        div.innerHTML = `<strong>${value}</strong><br>Count: ${count}`;
-        div.onclick = () => {
-          playClickSound();
-          incrementCounter(index);
-          addToOutput(value);
-          actionStack.push({ type: 'increment', index });
-        };
-        container.appendChild(div);
-      });
-      highlightLast();
-    }
+    <script>
+        let counters = [];
+        let lastHighlighted = null;
+        let actionStack = [];
+        let outputHistory = ['']; // Nuevo: Array para mantener el historial del output
 
-    function incrementCounter(index) {
-      counters[index].count++;
-      lastHighlighted = index;
-      renderCounters();
-    }
 
-    function highlightLast() {
-      if (lastHighlighted !== null) {
-        document
-          .getElementById(`counter-${lastHighlighted}`)
-          .classList.add('highlight');
-      }
-    }
+        const container = document.getElementById('counterContainer');
+        const startRangeInput = document.getElementById('startRange');
+        const endRangeInput = document.getElementById('endRange');
+        const clickSound = document.getElementById('clickSound');
+        const output = document.getElementById('output');
+        const filenameInput = document.getElementById('filename');
 
-    function sortByCount() {
-      counters.sort((a, b) => b.count - a.count);
-      renderCounters();
-    }
+        function initializeCounters(start, end) {
+            counters = Array.from({ length: end - start + 1 }, (_, i) => ({
+                value: start + i,
+                count: 0
+            }));
+            lastHighlighted = null;
+            actionStack = [];
+            outputHistory = [''];
+            output.value = '';
+            renderCounters();
+        }
 
-    function sortByValue() {
-      counters.sort((a, b) => a.value - b.value);
-      renderCounters();
-    }
+        function renderCounters() {
+            container.innerHTML = '';
+            counters.forEach(({ value, count }, index) => {
+                const div = document.createElement('div');
+                div.className = 'counter';
+                div.id = `counter-${index}`;
+                div.innerHTML = `<strong>${value}</strong><br>Count: ${count}`;
+                div.onclick = () => {
+                    playClickSound();
+                    incrementCounter(index);
+                    addToOutput(value);
+                    actionStack.push({ type: 'increment', index });
+                };
+                container.appendChild(div);
+            });
+            highlightLast();
+        }
 
-    function updateRange(event) {
-      event.preventDefault();
-      const start = parseInt(startRangeInput.value, 10);
-      const end = parseInt(endRangeInput.value, 10);
-      if (start < end) {
-        initializeCounters(start, end);
-      } else {
-        alert('El rango de inicio debe ser menor que el de fin.');
-      }
-    }
+        function incrementCounter(index) {
+            counters[index].count++;
+            lastHighlighted = index;
+            renderCounters();
+        }
 
-    function playClickSound() {
-      clickSound.currentTime = 0;
-      clickSound.play();
-    }
+        function highlightLast() {
+            if (lastHighlighted !== null) {
+                document
+                    .getElementById(`counter-${lastHighlighted}`)
+                    .classList.add('highlight');
+            }
+        }
 
-    function addToOutput(value) {
-      output.value += value + ' ';
-    }
+        function sortByCount() {
+            counters.sort((a, b) => b.count - a.count);
+            renderCounters();
+        }
 
-    function addSpecialCharacter(char) {
-      playClickSound();
-      addToOutput(char);
-      actionStack.push({ type: 'special', char });
-    }
+        function sortByValue() {
+            counters.sort((a, b) => a.value - b.value);
+            renderCounters();
+        }
 
-    function undoLastAction() {
-      if (actionStack.length === 0) {
-        alert('No hay acciones para deshacer.');
-        return;
-      }
-      const lastAction = actionStack.pop();
-      if (lastAction.type === 'increment') {
-        counters[lastAction.index].count--;
-        lastHighlighted = actionStack.filter(action => action.type === 'increment').slice(-1)[0]?.index || null;
-        renderCounters();
-      } else if (lastAction.type === 'special') {
-        const currentOutput = output.value.trimEnd();
-        output.value = currentOutput.slice(0, currentOutput.lastIndexOf(' ')) + ' ';
-      }
-    }
+        function updateRange(event) {
+            event.preventDefault();
+            const start = parseInt(startRangeInput.value, 10);
+            const end = parseInt(endRangeInput.value, 10);
+            if (start < end) {
+                initializeCounters(start, end);
+            } else {
+                alert('El rango de inicio debe ser menor que el de fin.');
+            }
+        }
 
-    function saveToFile(event) {
-      event.preventDefault();
-      const content = output.value.trim();
-      if (!content) {
-        alert('No hay contenido para guardar.');
-        return;
-      }
-      const filename = filenameInput.value || generateDefaultFilename();
-      const blob = new Blob([content], { type: 'text/plain' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = filename;
-      a.click();
-    }
+        function playClickSound() {
+            clickSound.currentTime = 0;
+            clickSound.play();
+        }
 
-    function generateDefaultFilename() {
-      const now = new Date();
-      const year = now.getFullYear().toString().slice(-2);
-      const month = String(now.getMonth() + 1).padStart(2, '0');
-      const day = String(now.getDate()).padStart(2, '0');
-      const hours = String(now.getHours()).padStart(2, '0');
-      const minutes = String(now.getMinutes()).padStart(2, '0');
-      const seconds = String(now.getSeconds()).padStart(2, '0');
-      return `Codificado${year}${month}${day}${hours}${minutes}${seconds}.txt`;
-    }
+        function addToOutput(value) {
+            const newOutput = output.value + value + ' ';
+            output.value = newOutput;
+            outputHistory.push(newOutput); // Guardamos el nuevo estado del output
+        }
 
-    initializeCounters(1, 27); // Inicializa el rango por defecto
-  </script>
+        function addSpecialCharacter(char) {
+            playClickSound();
+            addToOutput(char);
+            actionStack.push({ type: 'special', char });
+        }
+
+        function undoLastAction() {
+            if (actionStack.length === 0) {
+                alert('No hay acciones para deshacer.');
+                return;
+            }
+
+            const lastAction = actionStack.pop();
+            outputHistory.pop(); // Removemos el último estado del output
+            output.value = outputHistory[outputHistory.length - 1]; // Restauramos al estado anterior
+
+            if (lastAction.type === 'increment') {
+                counters[lastAction.index].count--;
+                lastHighlighted = actionStack.filter(action => action.type === 'increment').slice(-1)[0]?.index || null;
+                renderCounters();
+            }
+        }
+
+
+
+
+        function saveToFile(event) {
+            event.preventDefault();
+            const content = output.value.trim();
+            if (!content) {
+                alert('No hay contenido para guardar.');
+                return;
+            }
+            const filename = filenameInput.value || generateDefaultFilename();
+            const blob = new Blob([content], { type: 'text/plain' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = filename;
+            a.click();
+        }
+
+        function generateDefaultFilename() {
+            const now = new Date();
+            const year = now.getFullYear().toString().slice(-2);
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            return `Codificado${year}${month}${day}${hours}${minutes}${seconds}.txt`;
+        }
+
+        initializeCounters(1, 27); // Inicializa el rango por defecto
+    </script>
 </body>
+
 </html>
